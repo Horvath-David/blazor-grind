@@ -1,0 +1,129 @@
+﻿@page "/dboperations"
+@using GrindTwo.Data
+@using System.Security.Cryptography
+@using System.Text
+@inject AppDbContext DB
+
+<p>Message: @message</p>
+
+<button class="btn btn-primary" @onclick="InitStuff">init stuff</button>
+<button class="btn btn-primary" @onclick="Nuke">Nuke DB</button>
+
+@code {
+    private string message = "";
+
+    private async void InitStuff()
+    {
+        var venuesLines = File.ReadAllLines("venue.csv");
+
+        foreach (var line in venuesLines.Skip(1))
+        {
+            var parts = line.Split(",");
+
+            var venue = new Venue
+            {
+                Name = parts[0],
+                Location = parts[1]
+            };
+
+            await DB.Venues.AddAsync(venue);
+        }
+
+        var organizersLines = File.ReadAllLines("organizer.csv");
+
+        foreach (var line in organizersLines.Skip(1))
+        {
+            var parts = line.Split(",");
+
+            var passBytes = Encoding.UTF8.GetBytes(parts[1]);
+            var hashBytes = SHA256.HashData(passBytes);
+            var hash = Convert.ToHexString(hashBytes);
+
+            var organizer = new Organizer
+            {
+                Email = parts[0],
+                Password = hash,
+                PreName = parts[2],
+                FamilyName = parts[3],
+                PostalCodeAndTown = parts[4],
+                Birthday = DateOnly.Parse(parts[5]),
+                Address = parts[6],
+                Phone = parts[7],
+                Hobby = parts[8],
+            };
+
+            await DB.Organizers.AddAsync(organizer);
+        }
+
+        await DB.SaveChangesAsync();
+
+        message = "added orgs and venues...";
+
+
+        var moderatorsLines = File.ReadAllLines("moderator.csv");
+
+        foreach (var line in moderatorsLines.Skip(1))
+        {
+            var parts = line.Split(",");
+
+            var passBytes = Encoding.UTF8.GetBytes(parts[2]);
+            var hashBytes = SHA256.HashData(passBytes);
+            var hash = Convert.ToHexString(hashBytes);
+
+            var mod = new Moderator
+            {
+                Role = parts[0],
+                Email = parts[1],
+                Password = hash,
+                GivenName = parts[3],
+                FamilyName = parts[4],
+                Town = parts[5],
+                Birthday = DateOnly.Parse(parts[6]),
+                PostalCode = Convert.ToInt32(parts[7]),
+                StreetNumber = parts[8],
+                Phone = parts[9],
+            };
+
+            await DB.Moderators.AddAsync(mod);
+        }
+
+        var eventsLines = File.ReadAllLines("event.csv");
+
+        foreach (var line in eventsLines.Skip(1))
+        {
+            var parts = line.Split(",");
+
+            var eventObj = new Event
+            {
+                Name = parts[0],
+                Venue = DB.Venues.FirstOrDefault(x => x.Name == parts[1]),
+                Start = DateTime.Parse(parts[2]),
+                End = DateTime.Parse(parts[3]),
+                PriceInEuro = Convert.ToDecimal(parts[4]),
+                Program = parts[5],
+                Pictures = parts[6],
+                State = parts[7],
+                RejectionReason = parts[8],
+                Organizer = DB.Organizers.FirstOrDefault(x => x.Email == parts[9])
+            };
+
+            await DB.Events.AddAsync(eventObj);
+        }
+
+        await DB.SaveChangesAsync();
+
+        message = "seeded database";
+    }
+
+    private async void Nuke()
+    {
+        DB.Organizers.RemoveRange(DB.Organizers);
+        DB.Moderators.RemoveRange(DB.Moderators);
+        DB.Venues.RemoveRange(DB.Venues);
+        DB.Events.RemoveRange(DB.Events);
+
+        await DB.SaveChangesAsync();
+
+        message = "nuked db";
+    }
+}

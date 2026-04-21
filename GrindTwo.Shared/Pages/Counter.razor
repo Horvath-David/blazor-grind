@@ -1,0 +1,61 @@
+﻿@page "/counter"
+@using GrindTwo.Data
+@inject AppDbContext DB
+
+<PageTitle>Counter</PageTitle>
+
+<h1>Counter</h1>
+
+<p>Events count: @DB.Events.Count()</p>
+
+<p role="status">Current count: @currentCount</p>
+
+<button class="btn btn-primary" @onclick="InitStuff">init stuff</button>
+<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+
+@code {
+    private int currentCount = 0;
+
+    private async void InitStuff()
+    {
+        var org = new Organizer
+        {
+            Address = "asd",
+            Email = "asd",
+            FamilyName = "asd",
+            Hobby = "asd",
+            Password = "asd",
+            Phone = "asd",
+            PostalCodeAndTown = "asd",
+            PreName = "asd"
+        };
+
+        var ven = new Venue
+        {
+            Location = "asd",
+            Name = "asd"
+        };
+
+        await DB.Organizers.AddAsync(org);
+        await DB.Venues.AddAsync(ven);
+
+        await DB.SaveChangesAsync();
+    }
+
+    private async void IncrementCount()
+    {
+        currentCount++;
+
+        await DB.Events.AddAsync(new Event
+        {
+            Name = "asd",
+            Pictures = "",
+            Program = "",
+            RejectionReason = "",
+            State = "",
+            VenueId = 1,
+            OrganizerId = 1
+        });
+        await DB.SaveChangesAsync();
+    }
+}

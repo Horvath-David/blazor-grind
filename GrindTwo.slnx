@@ -1,0 +1,10 @@
+<Solution>
+  <Project Path="GrindTwo.Data/GrindTwo.Data.csproj" />
+  <Project Path="GrindTwo.Shared/GrindTwo.Shared.csproj" />
+  <Project Path="GrindTwo.Web/GrindTwo.Web.csproj">
+    <Deploy />
+  </Project>
+  <Project Path="GrindTwo/GrindTwo.csproj">
+    <Deploy />
+  </Project>
+</Solution>
