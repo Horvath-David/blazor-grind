@@ -1,0 +1,14 @@
+﻿@page "/moderator"
+@using GrindTwo.Shared.Services
+@inject IFormFactor FormFactor
+
+<PageTitle>Home</PageTitle>
+
+<h1>Moderator homepage</h1>
+
+Welcome to your new app running on <em>@factor</em> using <em>@platform</em>.
+
+@code {
+    private string factor => FormFactor.GetFormFactor();
+    private string platform => FormFactor.GetPlatform();
+}

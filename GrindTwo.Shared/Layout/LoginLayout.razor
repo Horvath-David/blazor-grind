@@ -1,0 +1,45 @@
+﻿@using GrindTwo.Data
+@inherits LayoutComponentBase
+@inject IJSRuntime JS
+@inject NavigationManager NM
+@inject AppDbContext DB
+
+<div class="page">
+    @Body
+</div>
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var userId = await JS.InvokeAsync<string?>("localStorage.getItem", "userId");
+            var role = await JS.InvokeAsync<string?>("localStorage.getItem", "role");
+            Console.WriteLine(role);
+
+            if (userId != null && role != null)
+            {
+                if (role == "organizer")
+                {
+                    var user = DB.Organizers.FirstOrDefault(x => x.Id == Convert.ToInt32(userId));
+                    if (user != null)
+                    {
+                        NM.NavigateTo("/organizer");
+                    }
+                }
+
+                else if (role == "moderator")
+                {
+                    var mod = DB.Moderators.FirstOrDefault(x => x.Id == Convert.ToInt32(userId));
+                    if (mod != null)
+                    {
+                        NM.NavigateTo("/moderator");
+                    }
+                }
+            }
+
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+}

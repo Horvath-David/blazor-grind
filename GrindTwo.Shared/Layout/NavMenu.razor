@@ -1,4 +1,7 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+﻿@inject IJSRuntime JS
+@inject NavigationManager NM
+
+<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="">GrindTwo</a>
     </div>
@@ -25,6 +28,21 @@
                 <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
             </NavLink>
         </div>
+
+        <div class="nav-item px-3">
+            <button class="nav-link" @onclick="Logout">
+                <span class="bi" aria-hidden="true"></span> Logout
+            </button>
+        </div>
     </nav>
 </div>
 
+@code {
+    private async void Logout()
+    {
+        await JS.InvokeVoidAsync("localStorage.removeItem", "userId");
+        await JS.InvokeVoidAsync("localStorage.removeItem", "role");
+
+        NM.NavigateTo("/login");
+    }
+}
