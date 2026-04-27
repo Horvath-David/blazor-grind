@@ -1,39 +1,69 @@
 @page "/login"
+@using GrindTwo.Data
+@using System.Text
+@using System.Security.Cryptography
+@using Microsoft.EntityFrameworkCore
 @layout LoginLayout
 @inject IJSRuntime JS
+@inject AppDbContext DB
+@inject NavigationManager NM
 
-<div>
-    <div class="form-group">
-        <label for="exampleInputEmail1">Email address</label>
-        <InputText @bind-Value="email" type="email" class="form-control" />
-    </div>
-    <div class="form-group">
-        <label for="exampleInputPassword1">Password</label>
-        <InputText @bind-Value="password" type="@(ShowPassword ? "text" : "password")" class="form-control" />
-    </div>
-    <div class="form-group form-check">
-        <InputCheckbox @bind-Value="ShowPassword" type="checkbox" class="form-check-input" id="exampleCheck1" />
-        <label class="form-check-label" for="exampleCheck1">Show password</label>
-    </div>
-    <button type="submit" class="btn btn-primary">Submit</button>
+<div class="mx-auto d-flex flex-column justify-content-center h-100">
+    <EditForm Model="LoginFormData" OnValidSubmit="HandleSubmit">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        <div class="form-group">
+            <label for="exampleInputEmail1">Email address</label>
+            <InputText @bind-Value="LoginFormData.Email" type="email" class="form-control" />
+        </div>
+        <div class="form-group">
+            <label for="exampleInputPassword1">Password</label>
+            <InputText @bind-Value="LoginFormData.Password" type="@(ShowPassword ? "text" : "password")"
+                       class="form-control" />
+        </div>
+        <div class="form-group form-check">
+            <InputCheckbox @bind-Value="ShowPassword" type="checkbox" class="form-check-input" id="exampleCheck1" />
+            <label class="form-check-label" for="exampleCheck1">Show password</label>
+        </div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </EditForm>
 </div>
 
 @code {
-    private string email = "";
-    private string password = "";
-    private bool ShowPassword { get; set; } = true;
+    private LoginData LoginFormData { get; set; } = new();
+    private bool ShowPassword { get; set; } = false;
 
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    private async Task HandleSubmit()
     {
-        if (firstRender)
+        var passBytes = Encoding.UTF8.GetBytes(LoginFormData.Password ?? "");
+        var hashBytes = SHA256.HashData(passBytes);
+        var hash = Convert.ToHexString(hashBytes);
+
+        try
         {
-            var userId = await JS.InvokeAsync<string?>("localStorage.getItem", "userId");
+            var org = await DB.Organizers.FirstOrDefaultAsync(x => x.Email == LoginFormData.Email && x.Password == hash);
+            if (org != null)
+            {
+                await JS.InvokeVoidAsync("localStorage.setItem", "userId", org.Id);
+                await JS.InvokeVoidAsync("localStorage.setItem", "role", "organizer");
+                NM.NavigateTo("/organizer");
+                return;
+            }
 
-
-            Console.WriteLine(userId);
+            var mod = await DB.Moderators.FirstOrDefaultAsync(x => x.Email == LoginFormData.Email && x.Password == hash);
+            if (mod != null)
+            {
+                await JS.InvokeVoidAsync("localStorage.setItem", "userId", mod.Id);
+                await JS.InvokeVoidAsync("localStorage.setItem", "role", "moderator");
+                NM.NavigateTo("/moderator");
+                return;
+            }
+            await JS.InvokeVoidAsync("alert", "Invalid credentials");
+        }
+        catch
+        {
+            await JS.InvokeVoidAsync("alert", "Unknown error happened");
         }
 
-        await base.OnAfterRenderAsync(firstRender);
     }
 }

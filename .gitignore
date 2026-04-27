@@ -3,3 +3,5 @@ obj
 .vs
 .vscode
 *.sqlite
+*.sqlite-wal
+*.sqlite-shm
