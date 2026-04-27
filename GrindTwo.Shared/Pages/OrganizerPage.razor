@@ -1,14 +1,54 @@
 ﻿@page "/organizer"
+@using GrindTwo.Data
 @using GrindTwo.Shared.Services
-@inject IFormFactor FormFactor
+@using System.Reflection.Metadata
+@using Microsoft.EntityFrameworkCore
+@inject AppDbContext DB
+@inject IJSRuntime JS
 
 <PageTitle>Home</PageTitle>
 
 <h1>Organizer homepage</h1>
 
-Welcome to your new app running on <em>@factor</em> using <em>@platform</em>.
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Venue</th>
+            <th>Start date</th>
+            <th>End date</th>
+            <th>State</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var eventObj in events)
+        {
+            <tr>
+                <td>@eventObj.Name</td>
+                <td>@eventObj.Venue?.Name</td>
+                <td>@eventObj.Start</td>
+                <td>@eventObj.End</td>
+                <td>@eventObj.State</td>
+            </tr>
+        }
+    </tbody>
+</table>
 
 @code {
-    private string factor => FormFactor.GetFormFactor();
-    private string platform => FormFactor.GetPlatform();
+    List<Event> events = [];
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        var userId = await JS.InvokeAsync<string?>("localStorage.getItem", "userId");
+        var idInt = Convert.ToInt32(userId);
+
+        if (firstRender)
+        {
+            events = await DB.Events.Where(x => x.OrganizerId == idInt).Include(x => x.Venue).ToListAsync();
+            StateHasChanged();
+        }
+
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
 }
