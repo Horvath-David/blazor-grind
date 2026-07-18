@@ -1,0 +1,54 @@
+﻿@page "/dash"
+
+<h1>Dashboard</h1>
+
+<div class="row mb-3">
+    <div class="col-3">
+        <div class="card">
+            <div class="card-header">Monthly sales</div>
+            <div class="card-body">
+                <h5 class="card-title">4725</h5>
+                <h6 class="card-subtitle">+32%</h6>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-3">
+        <div class="card">
+            <div class="card-header">Monthly profit</div>
+            <div class="card-body">
+                <h5 class="card-title">$7558</h5>
+                <h6 class="card-subtitle">+3%</h6>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-3">
+        <div class="card">
+            <div class="card-header">Monthly bounce rate</div>
+            <div class="card-body">
+                <h5 class="card-title">16.5%</h5>
+                <h6 class="card-subtitle">-13%</h6>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-3">
+        <div class="card">
+            <div class="card-header">Daily sales</div>
+            <div class="card-body">
+                <h5 class="card-title">32</h5>
+                <h6 class="card-subtitle">-27%</h6>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private int currentCount = 0;
+
+    private void IncrementCount()
+    {
+        currentCount++;
+    }
+}

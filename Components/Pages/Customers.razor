@@ -1,0 +1,155 @@
+﻿@page "/customers"
+@inject IJSRuntime JS
+
+<h1>Customers</h1>
+
+<button class="btn btn-primary" @onclick="() => selected = new Customer()">Add new customer</button>
+
+<table class="table table-striped" style="overflow-x: scroll;">
+    <thead>
+        <tr>
+            <th @onclick="@(() => (sort, asc) = ("Name", !asc))" style="cursor: pointer">Name @(sort == "Name" ? (asc ?
+                         "↓" : "↑") : "")</th>
+                <th @onclick="@(() => (sort, asc) = ("Email", !asc))" style="cursor: pointer">Email @(sort == "Email" ? (asc ?
+                         "↓" : "↑") : "")</th>
+                <th @onclick="@(() => (sort, asc) = ("Phone", !asc))" style="cursor: pointer">Phone @(sort == "Phone" ? (asc ?
+                         "↓" : "↑") : "")</th>
+                <th @onclick="@(() => (sort, asc) = ("Balance", !asc))" style="cursor: pointer">Balance @(sort == "Balance" ? (asc ?
+                         "↓" : "↑") : "")</th>
+                <th @onclick="@(() => (sort, asc) = ("CustomerSince", !asc))" style="cursor: pointer">Customer since @(sort == "CustomerSince" ? (asc ?
+                         "↓" : "↑") : "")</th>
+                <th @onclick="@(() => (sort, asc) = ("Vip", !asc))" style="cursor: pointer">VIP @(sort == "Vip" ? (asc ?
+                         "↓" : "↑") : "")</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var x in Items)
+            {
+                <tr>
+                    <td>@x.Name</td>
+                    <td>@x.Email</td>
+                    <td>@x.Phone</td>
+                    <td>@x.Balance</td>
+                    <td>@x.CustomerSince.ToShortDateString()</td>
+                    <td>@(x.Vip ? "yes" : "no")</td>
+                    <td>
+                        <button class="btn btn-primary btn-sm" @onclick="() => selected = x">Edit</button>
+                        <button class="btn btn-danger btn-sm" @onclick="() => Delete(x)">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    @if (selected is not null)
+    {
+        <div class="modal show d-block">
+            <div class="modal-dialog">
+                <EditForm Model="@selected" class="modal-content" OnValidSubmit="() => Save(selected!)">
+                    <DataAnnotationsValidator />
+                    <div class="modal-header">@(selected?.Id == 0 ? "Add" : "Edit") customer</div>
+                    <div class="modal-body">
+                        <label>
+                            Name
+                            <input @bind="@selected!.Name" class="form-control" />
+                        </label>
+                        <label>
+                            Email
+                            <input @bind="@selected!.Email" class="form-control" type="email" />
+                        </label>
+                        <label>
+                            Phone
+                            <input @bind="@selected!.Phone" class="form-control" />
+                        </label>
+
+                        <label>
+                            Balance
+                            <input @bind="@selected!.Balance" type="number" class="form-control" />
+                        </label>
+
+                        <label>
+                            Customer since
+                            <input @bind="@selected!.CustomerSince" type="date" class="form-control" />
+                        </label>
+
+                        <label>
+                            <input @bind="@selected!.Vip" class="form-check-input" type="checkbox" />
+                            VIP
+                        </label>
+
+                        <ValidationSummary class="d-block" />
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-danger" @onclick="() => selected = null">Cancel</button>
+                        <button class="btn btn-primary">Save</button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+        <div class="modal-backdrop show fade"></div>
+    }
+
+
+@code {
+    private List<Customer> data = new();
+    private bool asc = true;
+    private string sort = "Name";
+    Customer? selected;
+
+    async void Delete(Customer customer)
+    {
+        var confirm = await JS.InvokeAsync<bool>("confirm", "Are you sure you want to delete this?");
+        if (!confirm) return;
+        data.Remove(customer);
+        StateHasChanged();
+    }
+
+    void Save(Customer customer)
+    {
+        if (customer.Id == 0)
+        {
+            customer.Id = data.MaxBy(x => x.Id)?.Id + 1 ?? 1;
+            data.Add(customer);
+        }
+        else
+        {
+            var i = data.FindIndex((x) => x.Id == customer.Id);
+            data[i] = customer;
+        }
+        selected = null;
+    }
+
+    public IEnumerable<Customer> Items => (asc ? data.OrderBy(x => x.GetType().GetProperty(sort)?.GetValue(x)) :
+data.OrderByDescending(x => x.GetType().GetProperty(sort)?.GetValue(x)));
+
+    protected override async Task OnInitializedAsync()
+    {
+        var startDate = DateOnly.FromDateTime(DateTime.Now);
+        var summaries = new[] { "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering",
+"Scorching" };
+        data = Enumerable.Range(1, 5).Select(index => new Customer
+        {
+            Id = index,
+            Name = $"{summaries[Random.Shared.Next(summaries.Length)]} {summaries[Random.Shared.Next(summaries.Length)]}",
+            Email = $"customer{index}@example.com",
+            Phone = $"+36 30 {index.ToString().PadLeft(7, '0')}",
+            CustomerSince = startDate.AddDays(-index),
+            Balance = Random.Shared.Next(-2000, 5500),
+            Vip = Random.Shared.Next(0, 2) == 1
+        }).ToList();
+    }
+
+    public class Customer
+    {
+        public int Id { get; set; }
+        [System.ComponentModel.DataAnnotations.Required]
+        public string Name { get; set; } = "";
+        [System.ComponentModel.DataAnnotations.EmailAddress]
+        public string Email { get; set; } = "";
+        public string Phone { get; set; } = "";
+        public float Balance { get; set; }
+        public DateOnly CustomerSince { get; set; }
+        public bool Vip { get; set; }
+    }
+}

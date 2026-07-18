@@ -1,0 +1,24 @@
+﻿@inject AppState AS
+
+<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">GeneralUI</a>
+    </div>
+</div>
+
+<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+
+<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
+    <nav class="nav flex-column h-100">
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/dash" Match="NavLinkMatch.All">
+                Home
+            </NavLink>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/customers">
+                Customers
+            </NavLink>
+        </div>
+    </nav>
+</div>

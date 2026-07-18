@@ -1,0 +1,34 @@
+﻿@inherits LayoutComponentBase
+@inject AppState AS
+@inject NavigationManager NM
+
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main>
+        <div class="top-row px-4 gap-2">
+            <button type="button" class="btn btn-outline-secondary">
+                Notifications <span class="badge text-bg-danger">4</span>
+            </button>
+
+            <div class="btn-group">
+                <button class="btn btn-outline-primary disabled">
+                    <img style="width:1.5rem;border-radius:0.5rem;" src="https://placedog.net/320/320" />
+                    @AS.UserName
+                </button>
+                <button class="btn btn-outline-primary">
+                    Settings
+                </button>
+                <button class="btn btn-outline-primary" @onclick="@(() => { AS.UserId = null; AS.Save(); NM.NavigateTo("/"); })">
+                    Log out
+                </button>
+            </div>
+        </div>
+
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>

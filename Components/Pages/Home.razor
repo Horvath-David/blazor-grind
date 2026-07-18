@@ -1,0 +1,207 @@
+﻿@page "/"
+@using System.ComponentModel.DataAnnotations
+@layout LoginLayout
+@inject NavigationManager NM
+@inject IJSRuntime JS
+@inject AppState AS
+
+@if (signUp == 0 && !forgotPassword)
+{
+    <EditForm Model="@data" class="w-50 mx-auto d-flex flex-column gap-2" OnValidSubmit="Login">
+        <h1>Log in</h1>
+        <DataAnnotationsValidator />
+        <label class="">
+            Email
+            <input @bind="@data.Email" type="email" class="form-control" />
+        </label>
+        <label>
+            Password
+            <div class="input-group">
+                <input @bind="@data.Password" type="@(showPassword ? "text" : "password")" class="form-control" />
+                <button class="btn btn-primary" type="button"
+                        @onclick="@(() => showPassword = !showPassword)">@(showPassword ? "Hide" : "Show")</button>
+            </div>
+        </label>
+
+        <label>
+            <input type="checkbox" name="" id="" class="form-check-input">
+            Remember me
+        </label>
+
+        <ValidationSummary class="d-block" />
+
+        <button class="btn btn-primary">Login</button>
+        <button type="button" @onclick="() => forgotPassword = true" class="btn btn-link">Forgot password</button>
+        <button type="button" @onclick="() => signUp = 1" class="btn btn-link">Sign up</button>
+    </EditForm>
+}
+else if (signUp == 1)
+{
+    <EditForm Model="@signUpData" class="w-50 mx-auto d-flex flex-column gap-2" OnValidSubmit="() => signUp = 2">
+        <h1>Sign up</h1>
+        <DataAnnotationsValidator />
+
+        <div class="progress">
+            <div class="progress-bar" style="width: 33%;">Account details</div>
+        </div>
+
+        <label class="">
+            Name
+            <input @bind="@signUpData.Name" class="form-control" />
+        </label>
+        <label class="">
+            Email
+            <input @bind="@signUpData.Email" type="email" class="form-control" />
+        </label>
+        <label>
+            Password
+            <div class="input-group">
+                <input @bind="@signUpData.Password" type="@(showPassword ? "text" : "password")" class="form-control" />
+                <button class="btn btn-primary" type="button"
+                        @onclick="@(() => showPassword = !showPassword)">@(showPassword ? "Hide" : "Show")</button>
+            </div>
+        </label>
+
+        <ValidationSummary class="d-block" />
+
+        <div class="btn-group">
+            <button class="btn btn-primary">Next</button>
+        </div>
+        <button type="button" @onclick="() => signUp = 0" class="btn btn-link">Back to login</button>
+    </EditForm>
+}
+else if (signUp == 2)
+{
+    <EditForm Model="@signUpData" class="w-50 mx-auto d-flex flex-column gap-2" OnSubmit="Login">
+        <h1>Sign up</h1>
+
+        <div class="progress">
+            <div class="progress-bar" style="width: 66%;">Plan selection</div>
+        </div>
+
+        <div>Choose a plan:</div>
+
+        <div class="btn-group mb-3">
+            <input type="radio" name="tier" id="freetier" class="btn-check" checked>
+            <label for="freetier" class="btn btn-outline-primary">Free</label>
+
+            <input type="radio" name="tier" id="proier" class="btn-check">
+            <label for="proier" class="btn btn-outline-primary">Plus</label>
+
+            <input type="radio" name="tier" id="premiumtier" class="btn-check">
+            <label for="premiumtier" class="btn btn-outline-primary">Premium</label>
+        </div>
+
+        <div class="btn-group">
+            <button type="button" @onclick="() => signUp = 1" class="btn btn-outline-primary">Back</button>
+            <button class="btn btn-primary">Next</button>
+        </div>
+        <button type="button" @onclick="() => signUp = 0" class="btn btn-link">Back to login</button>
+    </EditForm>
+}
+else if (forgotPasswordStage2)
+{
+    <EditForm Model="@passwordResetData2" class="w-50 mx-auto d-flex flex-column gap-2"
+              OnValidSubmit="() => (forgotPasswordStage2, forgotPassword) = (false, false)">
+        <h1>Email sent!</h1>
+        <p>Check you inbox for a verification code</p>
+        <DataAnnotationsValidator />
+        <label class="">
+            Verification code
+            <input @bind="@passwordResetData2.Code" class="form-control" />
+        </label>
+
+        <ValidationSummary class="d-block" />
+
+        <button class="btn btn-primary">Submit</button>
+        <button type="button" @onclick="() => forgotPassword = false" class="btn btn-link">Back to login</button>
+    </EditForm>
+}
+else if (forgotPassword)
+{
+    <EditForm Model="@passwordResetData" class="w-50 mx-auto d-flex flex-column gap-2" OnValidSubmit="SubmitForgotPassword">
+        <h1>Forgot password</h1>
+        <DataAnnotationsValidator />
+        <label class="">
+            Email
+            <input @bind="@passwordResetData.Email" type="email" class="form-control" />
+        </label>
+
+        <ValidationSummary class="d-block" />
+
+        <button class="btn btn-primary">Submit</button>
+        <button type="button" @onclick="() => forgotPassword = false" class="btn btn-link">Back to login</button>
+    </EditForm>
+}
+
+
+@code {
+    LoginData data = new();
+    SignupData signUpData = new();
+    PasswordResetData passwordResetData = new();
+    PasswordResetData2 passwordResetData2 = new();
+    bool showPassword, forgotPassword, forgotPasswordStage2;
+    int signUp;
+
+    public void Login()
+    {
+        AS.UserId = 1;
+        AS.UserName = "Test User";
+        AS.Save();
+        NM.NavigateTo("/dash");
+    }
+
+    public void SubmitForgotPassword()
+    {
+        forgotPasswordStage2 = true;
+    }
+
+    public void SignUp()
+    {
+        AS.UserId = 1;
+        AS.UserName = "Test User";
+        AS.Save();
+        NM.NavigateTo("/dash");
+    }
+
+    protected override void OnInitialized()
+    {
+        if (AS.UserId is not null)
+        {
+            NM.NavigateTo("/dash");
+        }
+
+        base.OnInitialized();
+    }
+
+    public class LoginData
+    {
+        [EmailAddress]
+        public string Email { get; set; } = "";
+        [Required(ErrorMessage = "A password is required")]
+        public string Password { get; set; } = "";
+    }
+
+    public class SignupData
+    {
+        [Required]
+        public string Name { get; set; } = "";
+        [EmailAddress]
+        public string Email { get; set; } = "";
+        [Required(ErrorMessage = "A password is required")]
+        public string Password { get; set; } = "";
+    }
+
+    public class PasswordResetData
+    {
+        [EmailAddress]
+        public string Email { get; set; } = "";
+    }
+
+    public class PasswordResetData2
+    {
+        [Range(0, float.MaxValue, ErrorMessage = "You can only enter numbers")]
+        [Length(6, 6, ErrorMessage = "Code mut be 6 characters long")]
+        public string Code { get; set; } = "";
+    }
+}
